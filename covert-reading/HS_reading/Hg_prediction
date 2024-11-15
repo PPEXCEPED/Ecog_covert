@@ -1,0 +1,73 @@
+import torch
+import numpy as np
+import seaborn as sns
+import pandas as pd
+import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
+import scipy.io as scio
+import os
+from HS_reading import *
+from HS_reading.get_hg_feature import get_hg_feat
+
+import warnings
+warnings.filterwarnings("ignore")
+
+def get_hg(clean_data_path,task,HS_list):
+
+    for HS in HS_list:
+
+        save_path = clean_data_path + "TRF/" + "HS" + str(HS) + "/"
+        if not os.path.exists(save_path):
+            os.mkdir(save_path)
+
+        # load 或者从函数中直接得到，相应HS，相应task的字典
+        mat_file_name = save_path + "HS" + str(HS) + "_" + task + "_" + "_feat_hg_mat.npy"
+        if os.path.exists(mat_file_name):
+            feat_hg_mat = np.load(mat_file_name)
+        else:
+            feat_hg_mat = get_hg_feat(HS, task, clean_data_path)#matrix
+            np.save(mat_file_name, feat_hg_mat)
+
+        ds_a = -75
+        ds_p = 76
+        delays = np.arange(ds_a, ds_p)
+
+        r_2_total = np.zeros((feat_hg_mat.shape[1], feat_hg_mat.shape[1],5,1))
+        r_total= np.zeros((feat_hg_mat.shape[1], feat_hg_mat.shape[1],5,1))
+        wts_fold_total=np.zeros((feat_hg_mat.shape[1], feat_hg_mat.shape[1],5,157,1))
+        best_alpha_total=np.zeros((feat_hg_mat.shape[1], feat_hg_mat.shape[1],5,1))
+        pred_all_total=np.zeros((feat_hg_mat.shape[1], feat_hg_mat.shape[1],feat_hg_mat.shape[0],1))
+
+        for elec_x in range(feat_hg_mat.shape[1]):  # 获取电极的总数
+            for elec_y in range(feat_hg_mat.shape[1]):
+                # 生成电极对并相互预测
+                if elec_x != elec_y:
+                    test_corr_folds, wts_folds, best_alphas, pred_all = run_cv_temporal_ridge_regression_model(
+                        feat_hg_mat[:, elec_x].reshape((feat_hg_mat[:, elec_x].shape[0],1)), feat_hg_mat[:, elec_y].reshape((feat_hg_mat[:, elec_y].shape[0],1)), delays=delays, pred=True)
+                    r2 = test_corr_folds ** 2
+                    r = test_corr_folds
+
+                    r_2_total[elec_x, elec_y] = r2
+
+                    r_total[elec_x, elec_y] = r
+
+                    pred_all_total[elec_x, elec_y]=pred_all
+
+                    best_alpha_total[elec_x, elec_y]=best_alphas
+
+                    wts_fold_total[elec_x, elec_y]=wts_folds
+
+        np.save(save_path+'/r2.npy',r_2_total)
+        np.save(save_path + '/r.npy', r_total)
+        np.save(save_path + '/pred_all.npy', pred_all_total)
+        np.save(save_path + '/best_alpha.npy', best_alpha_total)
+        np.save(save_path + '/wts_fold.npy', wts_fold_total)
+        print('complete')
+
+if __name__ == '__main__':
+
+    clean_data_path = "E:/vs/python/data_for_code/"
+    task='overt'
+    HS_list = [76]
+    save_path="E:/vs/python/data_for_code/TRF_HG"
+    get_hg(clean_data_path, task,HS_list)

@@ -1,0 +1,13 @@
+phonetic feature,ba,da,ga,bu,du,gu,pa,ta,ka,sa,sha
+bilabial,1,,,1,,,1,,,,
+secondary labial,,,,,,,,,,,1
+alveolar,,1,,,1,,,1,,1,1
+velar,,,1,,,1,,,1,,
+mandibular,1,1,,1,1,,1,1,,1,1
+voiced,1,1,1,1,1,1,,,,,
+oral stop,1,1,1,1,1,1,1,1,1,,
+fricative,,,,,,,,,,1,1
+back tongue,1,1,1,1,1,1,1,1,1,1,1
+high tongue,,,,1,1,1,,,,,
+lip rounding,,,,1,1,1,,,,,
+jaw open,1,1,1,,,,1,1,1,1,1
